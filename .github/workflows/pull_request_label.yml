@@ -1,4 +1,4 @@
-name: PR Size Labeler
+name: Label Pull Requests
 
 on:
   pull_request:
@@ -7,47 +7,46 @@ on:
       - synchronize
 
 jobs:
-  label-pr-size:
+  label_pull_requests:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Repository
+      - name: Check out repository
         uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
+      - name: Fetch pull request diff
+        id: diff
+        run: |
+          diff=$(curl -sSL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3.diff" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}")
+          echo "::set-output name=diff::$diff"
 
-      - name: Install dependencies
-        run: npm install
+      - name: Calculate number of lines
+        id: lines
+        run: |
+          lines=$(echo "${{ steps.diff.outputs.diff }}" | grep -E "^\+" | grep -v "+++" | wc -l)
+          echo "::set-output name=lines::$lines"
+          echo "Number of lines: $lines"
 
-      - name: Run PR Size Labeler
-        run: node pr-size-labeler.js
-        env:
-          PR_SIZE: ${{ steps.setup.outputs.PR_SIZE }}
-
-      - name: Create/Update PR Label
+      - name: Label pull request
         uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const prSize = process.env.PR_SIZE;
-            let label = '';
-      
-            if (prSize <= 100) {
+            const lines = parseInt('${{ steps.lines.outputs.lines }}');
+            console.log("Number of lines:", lines);
+            let label;
+            if (lines <= 100) {
               label = 'small';
-            } else if (prSize <= 1000) {
+            } else if (lines <= 1000) {
               label = 'medium';
             } else {
               label = 'large';
             }
-      
-            const { Octokit } = require('@octokit/rest');
-            const octokit = new Octokit();
-            octokit.issues.addLabels({
+            github.issues.addLabels({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
               labels: [label]
             });
-            
