@@ -17,7 +17,7 @@ jobs:
         run: echo "::set-output name=lines::$(git diff --shortstat $(git merge-base origin/main ${{ github.event.pull_request.head.ref }}) ${{ github.event.pull_request.head.sha }} | awk '{print $1+$4+$7}')"
 
       - name: Add size label
-        uses: actions/github-script@v5
+        uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
