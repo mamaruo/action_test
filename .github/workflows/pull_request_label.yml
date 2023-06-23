@@ -1,4 +1,5 @@
-name: Pull Request Size Labeler
+name: PR Size Labeler
+
 on:
   pull_request:
     types:
@@ -6,37 +7,45 @@ on:
       - synchronize
 
 jobs:
-  label_pull_request:
+  label-pr-size:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
+      - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Count changed lines
-        id: count_lines
-        run: echo "::set-output name=lines::$(git diff --shortstat $(git merge-base origin/main ${{ github.event.pull_request.head.ref }}) ${{ github.event.pull_request.head.sha }} | awk '{print $1+$4+$7}')"
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
 
-      - name: Add size label
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run PR Size Labeler
+        run: node pr-size-labeler.js
+
+      - name: Create/Update PR Label
         uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const lines = parseInt('${{ steps.count_lines.outputs.lines }}');
+            const { context } = require('@actions/github');
+
+            const prSize = process.env.PR_SIZE;
             let label = '';
-            
-            if (lines >= 1 && lines <= 100) {
+
+            if (prSize <= 100) {
               label = 'small';
-            } else if (lines > 100 && lines <= 1000) {
+            } else if (prSize <= 1000) {
               label = 'medium';
-            } else if (lines > 1000) {
+            } else {
               label = 'large';
             }
 
-            if (label !== '') {
-              github.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                labels: [label]
-              });
-            }
+            const octokit = context.github;
+            octokit.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [label]
+            });
