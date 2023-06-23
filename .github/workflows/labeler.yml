@@ -1,4 +1,4 @@
-name: Label PR by Lines
+name: Pull Request Labeler
 
 on:
   pull_request:
@@ -7,39 +7,19 @@ on:
       - synchronize
 
 jobs:
-  label-pr:
+  label_pull_request:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Check out code
+      - name: Check out repository
         uses: actions/checkout@v2
-      
-      - name: Count lines in PR
-        id: lines
-        run: echo "::set-output name=lines::$(git diff --shortstat $(git merge-base origin/main ${{ github.event.pull_request.head.ref }})..${{ github.event.pull_request.head.ref }} | grep -Eo '([0-9]+) insertions?' | grep -Eo '[0-9]+')"
 
-      - name: Add label based on lines
-        env:
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        run: |
-          const github = require('@actions/github');
-          const octokit = github.getOctokit(process.env.ACCESS_TOKEN);
-          
-          const lines = parseInt('${{ steps.lines.outputs.lines }}');
-          let label = '';
-      
-          if (lines <= 100) {
-            label = 'small';
-          } else if (lines <= 1000) {
-            label = 'medium';
-          } else {
-            label = 'large';
-          }
-      
-          octokit.rest.issues.addLabels({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: context.issue.number,
-            labels: [label]
-          });
-        shell: bash
+      - name: Set up Node.js
+        uses: actions/setup-node@v2.5.2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run labeler
+        run: node labeler.js
