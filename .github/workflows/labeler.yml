@@ -27,7 +27,7 @@ jobs:
           
           const lines = parseInt('${{ steps.lines.outputs.lines }}');
           let label = '';
-
+      
           if (lines <= 100) {
             label = 'small';
           } else if (lines <= 1000) {
@@ -35,10 +35,11 @@ jobs:
           } else {
             label = 'large';
           }
-
+      
           octokit.rest.issues.addLabels({
             owner: context.repo.owner,
             repo: context.repo.repo,
             issue_number: context.issue.number,
             labels: [label]
           });
+        shell: bash
