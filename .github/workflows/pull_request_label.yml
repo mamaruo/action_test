@@ -16,7 +16,10 @@ jobs:
 
       - name: Calculate number of lines
         id: lines
-        run: echo "::set-output name=lines::$(git diff --shortstat origin/${{ github.base_ref }}...${{ github.head_ref }} | sed 's/[^0-9-]*//g' | awk '{s+=$1} END {print s}')"
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          lines=$(git diff --stat origin/${{ github.base_ref }}...${{ github.head_ref }} | tail -1 | awk '{print $1}')
+          echo "::set-output name=lines::$lines"
 
       - name: Label pull request
         uses: actions/github-script@v4
