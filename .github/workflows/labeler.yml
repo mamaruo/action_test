@@ -19,7 +19,7 @@ jobs:
         run: echo "::set-output name=lines::$(git diff --shortstat $(git merge-base origin/main ${{ github.event.pull_request.head.ref }})..${{ github.event.pull_request.head.ref }} | grep -Eo '([0-9]+) insertions?' | grep -Eo '[0-9]+')"
 
       - name: Add label based on lines
-        uses: actions/github-script@v5
+        uses: actions/github-script@v2.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
