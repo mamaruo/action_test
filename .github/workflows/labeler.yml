@@ -17,5 +17,5 @@ jobs:
       - name: Release Mastermind
         uses: Videndum/release-mastermind@0.0.0-alpha.7
         with:
-          GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           config: .github/allconfigs.json
