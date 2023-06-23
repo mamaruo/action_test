@@ -1,4 +1,5 @@
-name: Add Size Labels
+name: Label PR by Lines
+
 on:
   pull_request:
     types:
@@ -7,39 +8,36 @@ on:
       - edited
 
 jobs:
-  add_labels:
+  label-pr:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Check out code
         uses: actions/checkout@v2
       
-      - name: Count lines of code
-        id: count_lines
-        run: |
-          # Count lines of code changed in the pull request
-          lines=$(git diff --shortstat origin/main ${{ github.event.pull_request.head.ref }} | awk '{print $1 + $4}')
-          echo "::set-output name=lines::$lines"
-      
-      - name: Add label
-        uses: actions/github-script@v4
+      - name: Count lines in PR
+        id: lines
+        run: echo "::set-output name=lines::$(git diff --shortstat $(git merge-base origin/main ${{ github.event.pull_request.head.ref }})..${{ github.event.pull_request.head.ref }} | grep -Eo '([0-9]+) insertions?' | grep -Eo '[0-9]+')"
+
+      - name: Add label based on lines
+        uses: actions/github-script@v2.1.0
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const lines = parseInt(process.env.lines);
+            const lines = parseInt('${{ steps.lines.outputs.lines }}');
             let label = '';
-            
-            if (lines >= 1 && lines <= 100) {
+
+            if (lines <= 100) {
               label = 'small';
-            } else if (lines >= 101 && lines <= 1000) {
+            } else if (lines <= 1000) {
               label = 'medium';
-            } else if (lines > 1000) {
+            } else {
               label = 'large';
             }
-            
-            if (label) {
-              github.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                labels: [label]
-              });
-            }
+
+            github.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [label]
+            });
