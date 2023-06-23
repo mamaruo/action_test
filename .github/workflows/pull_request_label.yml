@@ -17,8 +17,7 @@ jobs:
       - name: Calculate number of lines
         id: lines
         run: |
-          git fetch origin ${{ github.base_ref }}
-          lines=$(git diff --stat origin/${{ github.base_ref }}...${{ github.head_ref }} | tail -1 | awk '{print $1}')
+          lines=$(git diff --numstat origin/${{ github.base_ref }}...${{ github.head_ref }} | awk '{sum += $1} END {print sum}')
           echo "::set-output name=lines::$lines"
 
       - name: Label pull request
