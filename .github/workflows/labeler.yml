@@ -5,7 +5,6 @@ on:
     types:
       - opened
       - synchronize
-      - edited
 
 jobs:
   label-pr:
@@ -20,24 +19,26 @@ jobs:
         run: echo "::set-output name=lines::$(git diff --shortstat $(git merge-base origin/main ${{ github.event.pull_request.head.ref }})..${{ github.event.pull_request.head.ref }} | grep -Eo '([0-9]+) insertions?' | grep -Eo '[0-9]+')"
 
       - name: Add label based on lines
-        uses: actions/github-script@v2.1.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const lines = parseInt('${{ steps.lines.outputs.lines }}');
-            let label = '';
+        env:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        run: |
+          const github = require('@actions/github');
+          const octokit = github.getOctokit(process.env.ACCESS_TOKEN);
+          
+          const lines = parseInt('${{ steps.lines.outputs.lines }}');
+          let label = '';
 
-            if (lines <= 100) {
-              label = 'small';
-            } else if (lines <= 1000) {
-              label = 'medium';
-            } else {
-              label = 'large';
-            }
+          if (lines <= 100) {
+            label = 'small';
+          } else if (lines <= 1000) {
+            label = 'medium';
+          } else {
+            label = 'large';
+          }
 
-            github.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              labels: [label]
-            });
+          octokit.rest.issues.addLabels({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            labels: [label]
+          });
