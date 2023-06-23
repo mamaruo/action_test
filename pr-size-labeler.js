@@ -9,4 +9,4 @@ function countPRSize() {
 
 const prSize = countPRSize();
 console.log(`PR Size: ${prSize}`);
-console.log(`::set-env name=PR_SIZE::${prSize}`);
+console.log(`PR_SIZE=${prSize}`);
