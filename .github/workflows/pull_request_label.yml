@@ -29,23 +29,24 @@ jobs:
       - name: Create/Update PR Label
         uses: actions/github-script@v4
         with:
-         github-token: ${{ secrets.GITHUB_TOKEN }}
-         script: |
-           const prSize = process.env.PR_SIZE;
-           let label = '';
-    
-           if (prSize <= 100) {
-             label = 'small';
-           } else if (prSize <= 1000) {
-             label = 'medium';
-           } else {
-             label = 'large';
-           }
-    
-           const octokit = require('@octokit/rest')();
-           octokit.issues.addLabels({
-             owner: context.repo.owner,
-             repo: context.repo.repo,
-             issue_number: context.issue.number,
-             labels: [label]
-           });
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prSize = process.env.PR_SIZE;
+            let label = '';
+      
+            if (prSize <= 100) {
+              label = 'small';
+            } else if (prSize <= 1000) {
+              label = 'medium';
+            } else {
+              label = 'large';
+            }
+      
+            const { Octokit } = require('@octokit/rest');
+            const octokit = new Octokit();
+            octokit.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [label]
+            });
