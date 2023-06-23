@@ -1,4 +1,4 @@
-name: PR Size Labeler
+name: Label Pull Requests
 
 on:
   pull_request:
@@ -7,53 +7,34 @@ on:
       - synchronize
 
 jobs:
-  label-pr-size:
+  label_pull_requests:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Repository
+      - name: Check out repository
         uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
+      - name: Calculate number of lines
+        id: lines
+        run: echo "::set-output name=lines::$(git diff --numstat origin/${{ github.base_ref }}...${{ github.head_ref }} | awk '{ s+=$1 } END { print s }')"
 
-      - name: Install dependencies
-        run: npm install
-             npm install @actions/github
-             npm install @actions/core
-             npm install @octokit/rest
-      
-
-      - name: Run PR Size Labeler
-        run: node pr-size-labeler.js
-        env:
-          PR_SIZE: ${{ steps.setup.outputs.PR_SIZE }}
-
-      - name: Create/Update PR Label
-        uses: actions/github-script@v5
+      - name: Label pull request
+        uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const prSize = process.env.PR_SIZE;
-            let label = '';
-      
-            if (prSize <= 100) {
+            const lines = parseInt('${{ steps.lines.outputs.lines }}');
+            let label;
+            if (lines <= 100) {
               label = 'small';
-            } else if (prSize <= 1000) {
+            } else if (lines <= 1000) {
               label = 'medium';
             } else {
               label = 'large';
             }
-      
-            const { Octokit } = require('@octokit/rest');
-            const octokit = new Octokit({
-              auth: process.env.GITHUB_TOKEN
-            });
-      
-            octokit.issues.addLabels({
-              owner: process.env.GITHUB_REPOSITORY_OWNER,
-              repo: process.env.GITHUB_REPOSITORY,
-              issue_number: process.env.GITHUB_ISSUE_NUMBER,
+            github.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
               labels: [label]
             });
