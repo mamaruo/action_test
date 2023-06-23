@@ -14,18 +14,26 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
-      - name: Fetch pull request diff
-        id: diff
+      - name: Fetch pull request files
+        id: files
         run: |
-          diff=$(curl -sSL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3.diff" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}")
-          echo "::set-output name=diff::$diff"
+          files=$(curl -sSL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
+            | jq -r '.[].filename')
+          echo "::set-output name=files::$files"
 
       - name: Calculate number of lines
         id: lines
         run: |
-          lines=$(echo "${{ steps.diff.outputs.diff }}" | grep -E "^\+" | grep -v "+++" | wc -l)
+          files="${{ steps.files.outputs.files }}"
+          lines=0
+          for file in $files; do
+            added_lines=$(git diff origin/${{ github.base_ref }} --unified=0 -- "$file" \
+              | grep -E '^\+' \
+              | grep -Ev '^\+\+\+' \
+              | wc -l)
+            lines=$((lines + added_lines))
+          done
           echo "::set-output name=lines::$lines"
           echo "Number of lines: $lines"
 
