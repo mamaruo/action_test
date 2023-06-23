@@ -16,7 +16,7 @@ jobs:
 
       - name: Calculate number of lines
         id: lines
-        run: echo "::set-output name=lines::$(git diff --numstat origin/${{ github.base_ref }}...${{ github.head_ref }} | awk '{if ($1 != "-" && $2 != "-") s+=$1-$2; else s+=$1} END {print s}')"
+        run: echo "::set-output name=lines::$(git diff --shortstat origin/${{ github.base_ref }}...${{ github.head_ref }} | sed 's/[^0-9-]*//g' | awk '{s+=$1} END {print s}')"
 
       - name: Label pull request
         uses: actions/github-script@v4
@@ -25,9 +25,9 @@ jobs:
           script: |
             const lines = parseInt('${{ steps.lines.outputs.lines }}');
             let label;
-            if (lines <= 11) {
+            if (lines <= 100) {
               label = 'small';
-            } else if (lines <= 100) {
+            } else if (lines <= 1000) {
               label = 'medium';
             } else {
               label = 'large';
