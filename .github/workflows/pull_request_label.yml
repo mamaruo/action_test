@@ -32,7 +32,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const gh = require('@actions/github');
-            const core = require('@actions/core');
+            const actionsCore = require('@actions/core');
       
             const prSize = process.env.PR_SIZE;
             let label = '';
@@ -45,7 +45,7 @@ jobs:
               label = 'large';
             }
       
-            const octokit = gh.getOctokit(core.getInput('github-token'));
+            const octokit = gh.getOctokit(actionsCore.getInput('github-token'));
             octokit.issues.addLabels({
               owner: gh.context.repo.owner,
               repo: gh.context.repo.repo,
