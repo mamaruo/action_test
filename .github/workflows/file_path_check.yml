@@ -1,0 +1,42 @@
+name: Check File Path
+
+on:
+  pull_request:
+    paths:
+      - '**'
+
+jobs:
+  check_file_path:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check file paths
+      id: check_paths
+      run: |
+        regex='^[0-9a-z_.-]+$'
+        for file in $(git diff --name-only HEAD^..HEAD); do
+          if ! [[ $file =~ $regex ]]; then
+            echo "::set-output name=invalid_paths::true"
+            echo "::set-output name=invalid_file::$file"
+            break
+          fi
+        done
+    
+    - name: Comment on Pull Request
+      if: steps.check_paths.outputs.invalid_paths == 'true'
+      uses: actions/github-script@v5
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const { context, github } = require('@actions/github');
+          
+          const message = `Invalid file path detected: ${process.env.invalid_file}`;
+          const comment = {
+            issue_number: context.payload.pull_request.number,
+            body: message
+          };
+          
+          github.issues.createComment({
+            ...context.repo,
+            ...comment
+          });
