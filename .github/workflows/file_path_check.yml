@@ -1,45 +1,30 @@
-name: Check File Path
-
+name: File Path Validation
 on:
   pull_request:
-    paths:
-      - '**'
+    types:
+      - opened
+      - synchronize
 
 jobs:
-  check_file_path:
+  validate_files:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
-      
-    - name: Check file paths
-      id: check_paths
-      run: |
-        regex='^[0-9a-z_.-]+$'
-        for file in $(git diff --name-only HEAD^..HEAD); do
-          if ! [[ $file =~ $regex ]]; then
-            echo "::set-output name=invalid_paths::true"
-            echo "::set-output name=invalid_file::$file"
-            break
-          fi
-        done
-    
-    - name: Comment on Pull Request
-      if: steps.check_paths.outputs.invalid_paths == 'true'
-      uses: actions/github-script@v5
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          const { context, github } = require('@actions/github');
+      - name: Check file paths
+        uses: actions/checkout@v2
+        
+      - name: Validate paths
+        run: |
+          # Regular expression pattern for validating file paths
+          pattern='^[0-9a-z_.\-/]+$'
           
-          const message = `Invalid file path detected: ${process.env.invalid_file}`;
-          const comment = {
-            issue_number: context.payload.pull_request.number,
-            body: message
-          };
+          # Get the list of modified files in the PR
+          files=$(git diff --name-only HEAD $(git merge-base HEAD ${{ github.base_ref }}))
           
-          github.issues.createComment({
-            ...context.repo,
-            ...comment
-          });
+          # Check each file path
+          for file in $files; do
+            if ! [[ $file =~ $pattern ]]; then
+              echo "Invalid file path: $file"
+              exit 1
+            fi
+          done
