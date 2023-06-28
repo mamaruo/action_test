@@ -1,0 +1,33 @@
+name: List Changed Files
+
+on:
+  pull_request:
+    types:
+      - synchronize
+
+jobs:
+  list-changed-files:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      
+    - name: List changed files
+      run: |
+        git diff --name-only origin/main ${{ github.sha }} > changed_files.txt
+        echo "::set-output name=changed_files::$(cat changed_files.txt)"
+        
+    - name: Comment on PR
+      uses: actions/github-script@v4
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const changedFiles = `${{ steps.list-changed-files.outputs.changed_files }}`;
+          const comment = `The following files were changed in this pull request:\n\n${changedFiles}`;
+          github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
