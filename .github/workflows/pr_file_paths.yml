@@ -50,6 +50,6 @@ jobs:
           regex: '^[0-9a-z_.\-\n\/]+$'
           
       - name: Exit with code 1 if not matched
-        if: ${{ steps.regex_match.outputs.match == '' }}
+        if: ${{ steps.regex_match.outputs.match != '' }}
         run:    
           exit 1
