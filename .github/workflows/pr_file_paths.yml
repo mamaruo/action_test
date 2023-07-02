@@ -1,0 +1,30 @@
+name: PR 文件路径
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  pr_file_paths:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: List PR file paths
+        id: pr_files
+        run: |
+          echo "PR_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})" >> $GITHUB_ENV
+
+      - name: Output PR file paths
+        run: |
+          file_paths=${{ env.PR_FILES }}
+          IFS='
+          '
+          read -ra paths <<< "$file_paths"
+          for path in "${paths[@]}"; do
+            echo "$path"
+          done
