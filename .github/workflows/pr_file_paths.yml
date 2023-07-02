@@ -16,8 +16,10 @@ jobs:
         id: list_files
         run: |
           git fetch origin ${{ github.event.pull_request.base.ref }}
-          echo "::set-output name=file_list::$(git diff --name-only FETCH_HEAD ${{ github.sha }})"
+          git diff --name-only FETCH_HEAD ${{ github.sha }} > file_list.txt
+          echo "::set-output name=file_list_path::file_list.txt"
           
       - name: Use file list
         run: |
-          echo ${{ steps.list_files.outputs.file_list }}
+          file_list_path=$(cat ${{ steps.list_files.outputs.file_list_path }})
+          cat ${{ file_list_path }}
