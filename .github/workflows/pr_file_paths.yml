@@ -43,7 +43,7 @@ jobs:
         with:
           text: |
             $(cat ${{ steps.use_file_list.outputs.artifacts_path }}/file_list.txt)
-          regex: '^[0-9a-z_.\-\n]+$'
+          regex: '^[0-9a-z_.\-\n\/]+$'
           
       - name: Exit with code 1 if not matched
         run: |
