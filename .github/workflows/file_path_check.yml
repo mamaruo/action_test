@@ -13,8 +13,11 @@ jobs:
 
       - name: Run PR check
         run: |
+          # 获取基准分支名称
+          base_branch=$(git rev-parse --abbrev-ref HEAD)
+
           # 获取修改的文件路径
-          files=$(git diff --name-only HEAD^ HEAD)
+          files=$(git diff --name-only $base_branch...HEAD)
 
           # 设置需要匹配的正则表达式
           regex='^[0-9a-z_.-]+$'
