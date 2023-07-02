@@ -37,6 +37,17 @@ jobs:
           name: file-list
           path: ${{ steps.use_file_list.outputs.artifacts_path }}
           
-      - name: Print file list
+      - name: Check file list with regex
+        id: regex_match
+        uses: actions-ecosystem/action-regex-match@v2
+        with:
+          text: |
+            $(cat ${{ steps.use_file_list.outputs.artifacts_path }}/file_list.txt)
+          regex: '^[0-9a-z_.\-\n]+$'
+          
+      - name: Exit with code 1 if not matched
         run: |
-          cat ${{ steps.use_file_list.outputs.artifacts_path }}/file_list.txt
+          if [[ "${{ steps.regex_match.outputs.match }}" == '' ]]; then
+            echo "Regex match failed."
+            exit 1
+          fi
