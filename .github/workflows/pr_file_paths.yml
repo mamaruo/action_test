@@ -14,4 +14,5 @@ jobs:
 
       - name: List files in PR
         run: |
-          git diff --name-only ${{ github.event.before }}...${{ github.event.after }}
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          git diff --name-only FETCH_HEAD ${{ github.sha }}
