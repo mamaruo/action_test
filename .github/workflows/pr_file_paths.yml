@@ -26,6 +26,7 @@ jobs:
           path: ${{ steps.list_files.outputs.file_list }}
           
       - name: Use file list
+        id: use_file_list
         run: |
           artifacts_path=$(mktemp -d)
           echo "::set-output name=artifacts_path::$artifacts_path"
