@@ -18,7 +18,9 @@ jobs:
 
           # 获取修改的文件路径
           files=$(git diff --name-only $base_branch...HEAD)
-          echo files
+
+          # 输出 files 的值
+          echo "Modified files: $files"
 
           # 设置需要匹配的正则表达式
           regex='^[0-9a-z_.-]+$'
