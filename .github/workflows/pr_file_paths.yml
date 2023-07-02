@@ -17,9 +17,25 @@ jobs:
         run: |
           git fetch origin ${{ github.event.pull_request.base.ref }}
           git diff --name-only FETCH_HEAD ${{ github.sha }} > file_list.txt
-          echo "::set-output name=file_list_path::file_list.txt"
+          echo "::set-output name=file_list::file_list.txt"
+          
+      - name: Upload file list artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: file-list
+          path: ${{ steps.list_files.outputs.file_list }}
           
       - name: Use file list
         run: |
-          file_list_path=$(cat ${{ steps.list_files.outputs.file_list_path }})
-          cat ${{ file_list_path }}
+          artifacts_path=$(mktemp -d)
+          echo "::set-output name=artifacts_path::$artifacts_path"
+          
+      - name: Download file list artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: file-list
+          path: ${{ steps.use_file_list.outputs.artifacts_path }}
+          
+      - name: Print file list
+        run: |
+          cat ${{ steps.use_file_list.outputs.artifacts_path }}/file_list.txt
