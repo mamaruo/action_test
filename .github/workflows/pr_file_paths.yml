@@ -36,18 +36,20 @@ jobs:
         with:
           name: file-list
           path: ${{ steps.use_file_list.outputs.artifacts_path }}
+
+      - name: Print file list
+        run: |
+          cat ${{ steps.use_file_list.outputs.artifacts_path }}/file_list.txt
           
       - name: Check file list with regex
         id: regex_match
-        uses: actions-ecosystem/action-regex-match@v2
-        with:
+        uses: actions-ecosystem/action-regex-match@v2.0.2
+        with: 
           text: |
             $(cat ${{ steps.use_file_list.outputs.artifacts_path }}/file_list.txt)
           regex: '^[0-9a-z_.\-\n\/]+$'
           
       - name: Exit with code 1 if not matched
-        run: |
-          if [[ "${{ steps.regex_match.outputs.match }}" == '' ]]; then
-            echo "Regex match failed."
-            exit 1
-          fi
+        if: ${{ steps.regex_match.outputs.match == '' }}
+        run:    
+          exit 1
