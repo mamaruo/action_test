@@ -1,30 +1,28 @@
-name: File Path Validation
+name: Pull Request Check
 on:
   pull_request:
-    types:
-      - opened
-      - synchronize
+    types: [opened, synchronize]
 
 jobs:
-  validate_files:
+  check:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check file paths
+      - name: Checkout code
         uses: actions/checkout@v2
-        
-      - name: Validate paths
+
+      - name: Run PR check
         run: |
-          # Regular expression pattern for validating file paths
-          pattern='^[0-9a-z_.\-/]+$'
-          
-          # Get the list of modified files in the PR
-          files=$(git diff --name-only HEAD $(git merge-base HEAD ${{ github.base_ref }}))
-          
-          # Check each file path
-          for file in $files; do
-            if ! [[ $file =~ $pattern ]]; then
-              echo "Invalid file path: $file"
-              exit 1
-            fi
-          done
+          # 获取修改的文件路径
+          files=$(git diff --name-only HEAD^ HEAD)
+
+          # 设置需要匹配的正则表达式
+          regex='^[0-9a-z_.-]+$'
+
+          # 检查文件路径是否符合正则表达式
+          if [[ $files =~ $regex ]]; then
+            echo "File paths match the regex pattern. Check passed."
+          else
+            echo "File paths do not match the regex pattern. Check failed."
+            exit 1
+          fi
