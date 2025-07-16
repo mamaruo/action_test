@@ -1,0 +1,7 @@
+on: push
+jobs:
+    job1:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Run a script
+              run: echo "This is job1 running on push event"
